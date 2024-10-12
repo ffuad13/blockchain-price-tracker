@@ -11,5 +11,6 @@ export class SchedulerService {
     console.log('Running scheduled price tracking...');
 
     await this.priceService.trackPrices();
+    await this.priceService.checkPriceAlerts();
   }
 }
