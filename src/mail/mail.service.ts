@@ -4,7 +4,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config()
 
-console.log('object :>> ', process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, process.env.SMTP_PASS);
 @Injectable()
 export class MailService {
   private transporter;
@@ -24,7 +23,7 @@ export class MailService {
   // Method to send email
   async sendAlertEmail(to: string, chain: string, price: number) {
     const mailOptions = {
-      from: '"Blockchain Tracker" <noreply@tracker.com>',
+      from: process.env.SMTP_USER || '"Blockchain Tracker" <noreply@tracker.com>',
       to: to,
       subject: `Price Alert: ${chain} has increased more than 3%`,
       text: `The price of ${chain} has increased by more than 3%. The current price is $${price}.`,
