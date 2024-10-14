@@ -5,15 +5,14 @@ import { Repository } from 'typeorm';
 import { MoralisService } from 'src/moralis/moralis.service';
 import { Alert } from 'src/entities/alert.entity';
 import { MailService } from 'src/mail/mail.service';
-import {ethToBtcRates} from 'src/utilities/conversion';
+import { ethToBtcRates } from 'src/utilities/conversion';
 
 @Injectable()
 export class PriceService {
   constructor(
     @InjectRepository(Price) private priceRepository: Repository<Price>,
+    @InjectRepository(Alert) private alertRepository: Repository<Alert>,
     private moralisService: MoralisService,
-    @InjectRepository(Alert)
-    private alertRepository: Repository<Alert>,
     private mailService: MailService,
   ) {}
 
@@ -32,9 +31,8 @@ export class PriceService {
     ethAmount: number,
   ): Promise<{ btcAmount: number; totalFeeEth: number; totalFeeUsd: number }> {
     // const ethToBtcRate: number = 0.065;
-    const getEthToBtcRate = await ethToBtcRates(`${ethAmount}`)
-    const ethToBtcRate: number = parseInt(getEthToBtcRate.result.estimate)
-
+    const getEthToBtcRate = await ethToBtcRates(`${ethAmount}`);
+    const ethToBtcRate: number = +getEthToBtcRate.result.estimate;
 
     // const ethToUsdRate: number = 2000;
     const getEthToUsdRate = await this.moralisService.getChain('Ethereum');
@@ -112,10 +110,17 @@ export class PriceService {
     }
 
     // Get the last price of each chain
-    const lastEthereumPrice = previousPrices.find(p => p.chain === 'Ethereum')?.price;
-    const lastPolygonPrice = previousPrices.find(p => p.chain === 'Polygon')?.price;
+    const lastEthereumPrice = previousPrices.find(
+      (p) => p.chain === 'Ethereum',
+    )?.price;
+    const lastPolygonPrice = previousPrices.find(
+      (p) => p.chain === 'Polygon',
+    )?.price;
 
-    if (typeof lastEthereumPrice === 'number' && typeof etherPrice === 'number') {
+    if (
+      typeof lastEthereumPrice === 'number' &&
+      typeof etherPrice === 'number'
+    ) {
       // Check if Ethereum has increased by more than 3%
       if (etherPrice > lastEthereumPrice * 0.03) {
         await this.sendAlerts('Ethereum', etherPrice);
@@ -131,15 +136,20 @@ export class PriceService {
   }
 
   // Send alerts for a specific chain and price
-  async sendAlerts(chain: string, price: number) {
-    const activeAlerts = await this.alertRepository.find({
-      where: { chain, isActive: true },
-    });
+  async sendAlerts(chain: string, price: number, email: string = '') {
+    if (email) {
+      await this.mailService.sendAlertEmail(email, chain, price);
+      // console.log(email)
+    } else {
+      const activeAlerts = await this.alertRepository.find({
+        where: { chain, isActive: true },
+      });
 
-    for (const alert of activeAlerts) {
-      if (price >= alert.targetPrice) {
-        await this.mailService.sendAlertEmail(alert.email, chain, price);
-        console.log('Sending price alert...');
+      for (const alert of activeAlerts) {
+        if (price >= alert.targetPrice) {
+          await this.mailService.sendAlertEmail(alert.email, chain, price);
+          console.log('Sending price alert...');
+        }
       }
     }
   }

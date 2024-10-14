@@ -19,6 +19,4 @@ export class AlertService {
   async findAllAlerts(): Promise<Alert[]> {
     return this.alertRepository.find();
   }
-
-
 }

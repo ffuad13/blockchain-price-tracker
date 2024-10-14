@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { PriceService } from 'src/price/price.service';
 import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 
@@ -13,8 +13,8 @@ export class PriceController {
     const res = await this.priceService.getPrice(chain);
     return {
       message: `Price of ${chain} retrieved`,
-      price: res
-    }
+      price: res,
+    };
   }
 
   @Get('swap-rate')
@@ -37,8 +37,14 @@ export class PriceController {
   }
 
   @Get('hourly')
-  @ApiOperation({ summary: 'Get the prices for each hour within the last 24 hours' })
-  @ApiResponse({ status: 200, description: 'Returns hourly prices of Ethereum and Polygon for the last 24 hours.' })
+  @ApiOperation({
+    summary: 'Get the prices for each hour within the last 24 hours',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns hourly prices of Ethereum and Polygon for the last 24 hours.',
+  })
   async getHourlyPrices() {
     const prices = await this.priceService.getPricesForLast24Hours();
     return prices;
