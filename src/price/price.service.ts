@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { MoralisService } from 'src/moralis/moralis.service';
 import { Alert } from 'src/entities/alert.entity';
 import { MailService } from 'src/mail/mail.service';
+import {ethToBtcRates} from 'src/utilities/conversion';
 
 @Injectable()
 export class PriceService {
@@ -30,8 +31,14 @@ export class PriceService {
   async swapEthToBtc(
     ethAmount: number,
   ): Promise<{ btcAmount: number; totalFeeEth: number; totalFeeUsd: number }> {
-    const ethToBtcRate: number = 0.065;
-    const ethToUsdRate: number = 2000;
+    // const ethToBtcRate: number = 0.065;
+    const getEthToBtcRate = await ethToBtcRates(`${ethAmount}`)
+    const ethToBtcRate: number = parseInt(getEthToBtcRate.result.estimate)
+
+
+    // const ethToUsdRate: number = 2000;
+    const getEthToUsdRate = await this.moralisService.getChain('Ethereum');
+    const ethToUsdRate = getEthToUsdRate.usdPrice;
     const feePercentage = 0.0003; // 0.03%
 
     const totalFeeEth = ethAmount * feePercentage;
@@ -124,7 +131,7 @@ export class PriceService {
   }
 
   // Send alerts for a specific chain and price
-  private async sendAlerts(chain: string, price: number) {
+  async sendAlerts(chain: string, price: number) {
     const activeAlerts = await this.alertRepository.find({
       where: { chain, isActive: true },
     });
