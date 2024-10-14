@@ -103,8 +103,8 @@ export class PriceService {
 
     const previousPrices = await this.priceRepository
       .createQueryBuilder('price')
-      .where('price.createdAt >= :oneHourAgo', { oneHourAgo })
-      .orderBy('price.createdAt', 'DESC')
+      .where('price.timestamp >= :oneHourAgo', { oneHourAgo })
+      .orderBy('price.timestamp', 'DESC')
       .getMany();
 
     if (previousPrices.length === 0) {
