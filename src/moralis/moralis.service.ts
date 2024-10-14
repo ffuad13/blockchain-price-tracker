@@ -14,11 +14,12 @@ export class MoralisService {
   }
 
   async getChain(chain: string) {
+    const addresses = chain === 'Ethereum' ? this.MORALIS_ADDRESS : '0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7'
     const chains = chain === 'Ethereum' ? EvmChain.ETHEREUM : EvmChain.POLYGON;
     const response = await Moralis.EvmApi.token.getTokenPrice({
       chain: chains,
-      address: this.MORALIS_ADDRESS,
-      exchange: 'uniswapv2'
+      address: addresses,
+      exchange: "uniswapv3"
     });
 
     return response.toJSON();
